@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Creativa - Versione Estetica Migliorata</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    /* Reset e base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      min-height: 100vh;
+      /* Rimosso overflow: hidden per permettere lo scrolling se necessario */
+    }
+    /* Layout container */
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(135deg, #4b79a1, #283e51);
+      color: #fff;
+      padding: 20px;
+      overflow-y: auto;
+      flex-shrink: 0; /* Impedisce alla sidebar di rimpicciolirsi */
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 5px;
+    }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar li {
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .sidebar li:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.02);
+    }
+    /* Area principale */
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      background: #fff;
+    }
+    .main h1 {
+      margin-bottom: 20px;
+      color: #4b79a1;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Form e textarea */
+    .input-group {
+      margin-bottom: 15px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 120px; /* Altezza minima per le textarea */
+    }
+    /* Bottoni */
+    button {
+      padding: 10px 20px;
+      background-color: #4b79a1;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #3a6073;
+    }
+    /* Iframe preview */
+    iframe {
+      width: 100%;
+      height: 350px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 15px;
+    }
+    /* Memory Game */
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(4, 150px);
+      grid-gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      width: 150px;
+      height: 150px;
+      border: 2px solid #ddd;
+      background-color: #fafafa;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.4s, box-shadow 0.3s;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .card img {
+      max-width: 100%;
+      max-height: 100%;
+      display: none;
+      border-radius: 4px;
+      object-fit: contain; /* Assicura che l'immagine si adatti senza distorsioni */
+    }
+    .card.flipped img {
+      display: block;
+    }
+    .card.matched {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+    .timer, .score, .highscore {
+      font-size: 18px;
+      margin: 10px 0;
+      text-align: center;
+      color: #333;
+    }
+    /* Libreria */
+    .project-item {
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin: 5px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .project-item:hover {
+      background-color: #f0f0f0;
+    }
+    .project-item.selected {
+      background-color: #e0f7ff;
+      border-color: #a1d7f7;
+    }
+
+    /* --- Media Queries per Mobile Optimization --- */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column; /* Sidebar e Main si impilano verticalmente */
+        height: auto; /* Permette lo scrolling su schermi piccoli */
+      }
+      .sidebar {
+        width: 100%; /* Sidebar a tutta larghezza */
+        padding: 15px;
+        height: auto; /* Altezza automatica per la sidebar */
+      }
+      .sidebar h2 {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .sidebar ul {
+        display: flex; /* Elementi del menu in linea */
+        flex-wrap: wrap; /* Avvolgi su più righe se necessario */
+        justify-content: center; /* Centra gli elementi */
+        gap: 8px; /* Spazio tra gli elementi */
+      }
+      .sidebar li {
+        padding: 8px 12px;
+        margin: 0; /* Rimuovi margin-bottom per layout flex */
+        font-size: 13px;
+        flex: 1 1 auto; /* Permette agli elementi di crescere e restringersi */
+        text-align: center;
+      }
+      .main {
+        padding: 15px; /* Riduci il padding nella main area */
+        overflow-y: visible; /* Assicura lo scrolling nel main */
+      }
+      .main h1 {
+        font-size: 24px; /* Riduci la dimensione dei titoli */
+        text-align: center;
+      }
+      .input-group label, input[type="text"], textarea, button {
+        font-size: 13px; /* Riduci la dimensione del testo per input e bottoni */
+      }
+      textarea {
+        min-height: 100px; /* Riduci l'altezza minima delle textarea su mobile */
+      }
+      button {
+        display: block; /* I bottoni occupano tutta la larghezza */
+        width: 100%;
+        margin-bottom: 10px; /* Spazio tra i bottoni */
+      }
+      div[style="margin-top:20px;"] button {
+        margin-top: 0;
+      }
+
+      /* Ottimizzazione del gioco Memory per schermi più piccoli */
+      .game-container {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 2 o 3 colonne adattive */
+        grid-gap: 10px; /* Riduci lo spazio tra le carte */
+      }
+      .card {
+        width: 100%; /* Le carte occupano lo spazio disponibile nella griglia */
+        height: 100px; /* Altezza fissa per le carte */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar ul {
+        flex-direction: column; /* Torna a colonna per schermi molto piccoli */
+        align-items: stretch; /* Allunga gli elementi */
+      }
+      .sidebar li {
+        margin: 3px 0;
+      }
+      .game-container {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Riduci ulteriormente le carte */
+      }
+      .card {
+        height: 80px;
+      }
+      .timer, .score, .highscore {
+        font-size: 16px; /* Riduci la dimensione del testo del timer/punteggio */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>CREA</h2>
+      <ul>
+        <li id="btn-nuovo-memory">Nuovo memory</li>
+        <li id="btn-nuovo-html">Nuovo script HTML</li>
+        <li id="btn-nuovo-htmlcssjs">Nuovo script HTML/CSS/JS</li>
+      </ul>
+      <h2>LE TUE LIBRERIE</h2>
+      <ul>
+        <li id="btn-lib-memory">I tuoi progetti memory</li>
+        <li id="btn-lib-html">I tuoi progetti HTML</li>
+        <li id="btn-lib-htmlcssjs">I tuoi progetti HTML/CSS/JS</li>
+      </ul>
+    </div>
+    <div class="main">
+      <div id="home-screen">
+        <h1>Benvenuto nell'App Creativa!</h1>
+        <p>Scegli un progetto dal menù a sinistra per iniziare.</p>
+      </div>
+      <div id="memory-screen" class="hidden">
+        <h1>Nuovo Memory</h1>
+        <div id="memory-inputs">
+          <p>Inserisci i link delle immagini (8 link):</p>
+          <div class="input-group">
+            <label for="img1">Immagine 1:</label>
+            <input type="text" id="img1" value="https://via.placeholder.com/150/FF0000/FFFFFF?text=Img1">
+          </div>
+          <div class="input-group">
+            <label for="img2">Immagine 2:</label>
+            <input type="text" id="img2" value="https://via.placeholder.com/150/00FF00/FFFFFF?text=Img2">
+          </div>
+          <div class="input-group">
+            <label for="img3">Immagine 3:</label>
+            <input type="text" id="img3" value="https://via.placeholder.com/150/0000FF/FFFFFF?text=Img3">
+          </div>
+          <div class="input-group">
+            <label for="img4">Immagine 4:</label>
+            <input type="text" id="img4" value="https://via.placeholder.com/150/FFFF00/FFFFFF?text=Img4">
+          </div>
+          <div class="input-group">
+            <label for="img5">Immagine 5:</label>
+            <input type="text" id="img5" value="https://via.placeholder.com/150/FF00FF/FFFFFF?text=Img5">
+          </div>
+          <div class="input-group">
+            <label for="img6">Immagine 6:</label>
+            <input type="text" id="img6" value="https://via.placeholder.com/150/00FFFF/FFFFFF?text=Img6">
+          </div>
+          <div class="input-group">
+            <label for="img7">Immagine 7:</label>
+            <input type="text" id="img7" value="https://via.placeholder.com/150/000000/FFFFFF?text=Img7">
+          </div>
+          <div class="input-group">
+            <label for="img8">Immagine 8:</label>
+            <input type="text" id="img8" value="https://via.placeholder.com/150/FFFFFF/000000?text=Img8">
+          </div>
+          <button id="preview-memory">Aggiorna Anteprima</button>
+        </div>
+        <div id="memory-preview">
+          <h2>Anteprima Memory</h2>
+          <div id="memory-game-container"></div>
+        </div>
+        <div style="margin-top:20px;">
+          <button id="save-memory">Salva</button>
+          <button id="download-memory">Scarica</button>
+        </div>
+      </div>
+      <div id="html-screen" class="hidden">
+        <h1>Nuovo Script HTML</h1>
+        <textarea id="html-code" placeholder="Scrivi il tuo HTML qui..."></textarea>
+        <button id="update-html-preview">Aggiorna Anteprima</button>
+        <div id="html-preview">
+          <h2>Anteprima</h2>
+          <iframe id="html-iframe"></iframe>
+        </div>
+        <div style="margin-top:20px;">
+          <button id="save-html">Salva</button>
+        </div>
+      </div>
+      <div id="htmlcssjs-screen" class="hidden">
+        <h1>Nuovo Script HTML/CSS/JS</h1>
+        <textarea id="html-code-2" placeholder="Scrivi il tuo HTML qui..."></textarea>
+        <textarea id="css-code" placeholder="Scrivi il tuo CSS qui..."></textarea>
+        <textarea id="js-code" placeholder="Scrivi il tuo JavaScript qui..."></textarea>
+        <button id="update-htmlcssjs-preview">Aggiorna Anteprima</button>
+        <div id="htmlcssjs-preview">
+          <h2>Anteprima</h2>
+          <iframe id="htmlcssjs-iframe"></iframe>
+        </div>
+        <div style="margin-top:20px;">
+          <button id="save-htmlcssjs">Salva</button>
+        </div>
+      </div>
+      <div id="library-screen" class="hidden">
+        <h1>Libreria</h1>
+        <div id="library-list">
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      /* --- Gestione Schermate --- */
+      function showScreen(screenId) {
+        document.querySelectorAll('.main > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(screenId).classList.remove('hidden');
+      }
+      
+      /* --- Event Listeners Menù --- */
+      document.getElementById('btn-nuovo-memory').addEventListener('click', () => {
+        showScreen('memory-screen');
+        loadMemoryGame();
+      });
+      document.getElementById('btn-nuovo-html').addEventListener('click', () => {
+        showScreen('html-screen');
+      });
+      document.getElementById('btn-nuovo-htmlcssjs').addEventListener('click', () => {
+        showScreen('htmlcssjs-screen');
+      });
+      document.getElementById('btn-lib-memory').addEventListener('click', () => {
+        showScreen('library-screen');
+        loadLibrary('memory');
+      });
+      document.getElementById('btn-lib-html').addEventListener('click', () => {
+        showScreen('library-screen');
+        loadLibrary('html');
+      });
+      document.getElementById('btn-lib-htmlcssjs').addEventListener('click', () => {
+        showScreen('library-screen');
+        loadLibrary('htmlcssjs');
+      });
+      
+      /* --- Funzioni per il Memory --- */
+      function loadMemoryGame() {
+        const images = [];
+        for (let i = 1; i <= 8; i++) {
+          images.push(document.getElementById('img' + i).value);
+        }
+        const imageMap = {};
+        const characters = [];
+        for (let i = 1; i <= 8; i++) {
+          const key = 'Img' + i;
+          imageMap[key] = images[i - 1];
+          characters.push(key);
+        }
+        const fullCharacters = characters.concat(characters);
+        fullCharacters.sort(() => Math.random() - 0.5);
+        
+        const container = document.getElementById('memory-game-container');
+        container.innerHTML = "";
+        
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'timer';
+        timerDiv.textContent = 'Tempo: 0s';
+        container.appendChild(timerDiv);
+        
+        const scoreDiv = document.createElement('div');
+        scoreDiv.className = 'score';
+        scoreDiv.textContent = 'Punteggio: 0';
+        container.appendChild(scoreDiv);
+        
+        const highscoreDiv = document.createElement('div');
+        highscoreDiv.className = 'highscore';
+        // Aggiungi logica per highscore se presente in localStorage
+        const currentHighscore = localStorage.getItem('memoryHighscore') || 0;
+        highscoreDiv.textContent = 'Punteggio Migliore: ' + currentHighscore;
+        container.appendChild(highscoreDiv);
+        
+        const gameBoard = document.createElement('div');
+        gameBoard.className = 'game-container';
+        container.appendChild(gameBoard);
+        
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let score = 0;
+        let timerCount = 0;
+        let timerInterval;
+        let gameStarted = false; // Flag per il timer
+        
+        function startTimer() {
+            if (!gameStarted) {
+                gameStarted = true;
+                timerInterval = setInterval(() => {
+                    timerCount++;
+                    timerDiv.textContent = 'Tempo: ' + timerCount + 's';
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            gameStarted = false;
+        }
+
+        function resetGame() {
+            stopTimer();
+            timerCount = 0;
+            score = 0;
+            matchedPairs = 0;
+            timerDiv.textContent = 'Tempo: 0s';
+            scoreDiv.textContent = 'Punteggio: 0';
+            flippedCards = [];
+            
+            // Rimescola e ricrea le carte
+            fullCharacters.sort(() => Math.random() - 0.5);
+            gameBoard.innerHTML = '';
+            fullCharacters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.character = character;
+                const img = document.createElement('img');
+                img.src = imageMap[character];
+                card.appendChild(img);
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+            });
+            startTimer(); // Inizia il timer al reset del gioco
+        }
+        
+        function checkMatch() {
+          if (flippedCards.length < 2) return;
+          const [card1, card2] = flippedCards;
+          if (card1.dataset.character === card2.dataset.character) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            matchedPairs++;
+            score += 10;
+            scoreDiv.textContent = 'Punteggio: ' + score;
+            if (matchedPairs === fullCharacters.length / 2) {
+              stopTimer();
+              const finalMessage = 'Hai vinto! Tempo: ' + timerCount + 's, Punteggio: ' + score;
+              setTimeout(() => alert(finalMessage), 500);
+              
+              // Aggiorna highscore
+              const currentHighscore = parseInt(localStorage.getItem('memoryHighscore') || 0);
+              if (score > currentHighscore) {
+                  localStorage.setItem('memoryHighscore', score);
+                  highscoreDiv.textContent = 'Punteggio Migliore: ' + score;
+              }
+            }
+          } else {
+            setTimeout(() => {
+              card1.classList.remove('flipped');
+              card2.classList.remove('flipped');
+            }, 1000);
+            score = Math.max(0, score - 5); // Assicura che il punteggio non scenda sotto zero
+            scoreDiv.textContent = 'Punteggio: ' + score;
+          }
+          flippedCards = [];
+        }
+        
+        function flipCard() {
+          startTimer(); // Avvia il timer al primo click
+          if (this.classList.contains('flipped') || this.classList.contains('matched') || flippedCards.length === 2) return;
+          this.classList.add('flipped');
+          flippedCards.push(this);
+          if (flippedCards.length === 2) {
+            checkMatch();
+          }
+        }
+        
+        fullCharacters.forEach(character => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.dataset.character = character;
+          const img = document.createElement('img');
+          img.src = imageMap[character];
+          card.appendChild(img);
+          card.addEventListener('click', flipCard);
+          gameBoard.appendChild(card);
+        });
+        
+        // Aggiungi un pulsante "Ricomincia" per il gioco nell'editor
+        const restartBtn = document.createElement('button');
+        restartBtn.textContent = 'Ricomincia';
+        restartBtn.style.marginTop = '20px';
+        restartBtn.addEventListener('click', resetGame);
+        container.appendChild(restartBtn);
+      }
+      
+      document.getElementById('preview-memory').addEventListener('click', loadMemoryGame);
+      
+      /* --- Funzioni per HTML preview --- */
+      document.getElementById('update-html-preview').addEventListener('click', () => {
+        const code = document.getElementById('html-code').value;
+        document.getElementById('html-iframe').srcdoc = code;
+      });
+      
+      /* --- Funzioni per HTML/CSS/JS preview --- */
+      document.getElementById('update-htmlcssjs-preview').addEventListener('click', () => {
+        const htmlCode = document.getElementById('html-code-2').value;
+        const cssCode = document.getElementById('css-code').value;
+        const jsCode = document.getElementById('js-code').value;
+        const srcDoc = `<!DOCTYPE html>
+          <html lang="it">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Preview</title>
+              <style>${cssCode}</style>
+            </head>
+            <body>
+              ${htmlCode}
+              <script>${jsCode}<\/script>
+            </body>
+          </html>`;
+        document.getElementById('htmlcssjs-iframe').srcdoc = srcDoc;
+      });
+      
+      /* --- Funzioni Libreria --- */
+      function saveProject(type, content) {
+        const name = prompt("Inserisci il nome del progetto:");
+        if (!name) return;
+        const key = "library_" + type;
+        let projects = JSON.parse(localStorage.getItem(key)) || [];
+        projects.push({ name, content });
+        localStorage.setItem(key, JSON.stringify(projects));
+        alert("Progetto salvato!");
+      }
+      
+      document.getElementById('save-memory').addEventListener('click', () => {
+        const images = [];
+        for (let i = 1; i <= 8; i++) {
+          images.push(document.getElementById('img' + i).value);
+        }
+        saveProject('memory', images);
+      });
+      document.getElementById('save-html').addEventListener('click', () => {
+        const code = document.getElementById('html-code').value;
+        saveProject('html', code);
+      });
+      document.getElementById('save-htmlcssjs').addEventListener('click', () => {
+        const htmlCode = document.getElementById('html-code-2').value;
+        const cssCode = document.getElementById('css-code').value;
+        const jsCode = document.getElementById('js-code').value;
+        saveProject('htmlcssjs', { html: htmlCode, css: cssCode, js: jsCode });
+      });
+      
+      function loadLibrary(type) {
+        const key = "library_" + type;
+        const projects = JSON.parse(localStorage.getItem(key)) || [];
+        const libraryList = document.getElementById('library-list');
+        libraryList.innerHTML = "<h2>Progetti " + type.toUpperCase() + "</h2>";
+        
+        if (projects.length === 0) {
+            libraryList.innerHTML += "<p>Nessun progetto salvato per questa categoria.</p>";
+            return;
+        }
+
+        projects.forEach((project, index) => {
+          const item = document.createElement('div');
+          item.className = 'project-item';
+          item.textContent = project.name;
+          item.tabIndex = 0;
+          item.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.project-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+          });
+          item.addEventListener('dblclick', () => {
+            if (type === 'memory') {
+              if (Array.isArray(project.content)) {
+                for (let i = 1; i <= 8; i++) {
+                  document.getElementById('img' + i).value = project.content[i - 1];
+                }
+                showScreen('memory-screen');
+                loadMemoryGame();
+              }
+            } else if (type === 'html') {
+              document.getElementById('html-code').value = project.content;
+              showScreen('html-screen');
+              document.getElementById('update-html-preview').click();
+            } else if (type === 'htmlcssjs') {
+              document.getElementById('html-code-2').value = project.content.html;
+              document.getElementById('css-code').value = project.content.css;
+              document.getElementById('js-code').value = project.content.js;
+              showScreen('htmlcssjs-screen');
+              document.getElementById('update-htmlcssjs-preview').click();
+            }
+          });
+          item.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'x') {
+              if (confirm("Vuoi cancellare questo progetto?")) {
+                projects.splice(index, 1);
+                localStorage.setItem(key, JSON.stringify(projects));
+                loadLibrary(type);
+              }
+            }
+          });
+          libraryList.appendChild(item);
+        });
+      }
+      
+      /* --- Funzione per Scaricare il Memory --- */
+      document.getElementById('download-memory').addEventListener('click', () => {
+        const images = [];
+        for (let i = 1; i <= 8; i++) {
+          images.push(document.getElementById('img' + i).value);
+        }
+        const imageMap = {};
+        const characters = [];
+        for (let i = 1; i <= 8; i++) {
+          const key = 'Img' + i;
+          imageMap[key] = images[i - 1];
+          characters.push(key);
+        }
+        const fullCharacters = characters.concat(characters);
+        fullCharacters.sort(() => Math.random() - 0.5);
+        
+        const htmlContent = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gioco di Memoria</title>
+  <style>
+    body { font-family: 'Roboto', sans-serif; text-align: center; background-color: #f7f9fc; margin: 0; padding: 20px; }
+    .game-container { display: grid; grid-template-columns: repeat(4, 150px); grid-gap: 15px; justify-content: center; margin-top: 20px; }
+    .card { width: 150px; height: 150px; border: 2px solid #ddd; background-color: #fafafa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.4s, box-shadow 0.3s; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .card img { max-width: 100%; max-height: 100%; display: none; border-radius: 4px; object-fit: contain; }
+    .card.flipped img { display: block; }
+    .card.matched { background-color: #d4edda; border-color: #c3e6cb; }
+    .timer, .score, .highscore { font-size: 18px; margin: 10px 0; text-align: center; }
+    button { padding: 10px 20px; background-color: #4b79a1; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 20px; }
+    button:hover { background-color: #3a6073; }
+
+    /* Media Queries per il gioco scaricabile */
+    @media (max-width: 768px) {
+      .game-container {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        grid-gap: 10px;
+      }
+      .card {
+        width: 100%;
+        height: 100px;
+      }
+      body {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      .timer, .score, .highscore {
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .game-container {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      }
+      .card {
+        height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Gioco di Memoria</h1>
+  <div class="timer">Tempo: <span id="timer">0</span>s</div>
+  <div class="score">Punteggio: <span id="score">0</span></div>
+  <div class="highscore">Punteggio Migliore: <span id="highscore">0</span></div>
+  <div class="game-container" id="game-board"></div>
+  <button id="restart-button">Ricomincia</button>
+  <script>
+    const imageMap = ${JSON.stringify(imageMap)};
+    let characters = ${JSON.stringify(fullCharacters)};
+    let currentHighscore = parseInt(localStorage.getItem('memoryHighscoreGame') || 0);
+    document.getElementById('highscore').textContent = currentHighscore;
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    shuffleArray(characters);
+    const gameBoard = document.getElementById('game-board');
+    const timerElement = document.getElementById('timer');
+    const scoreElement = document.getElementById('score');
+    const highscoreElement = document.getElementById('highscore');
+    const restartButton = document.getElementById('restart-button');
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let score = 0;
+    let timer = 0;
+    let timerInterval;
+    let gameStarted = false;
+
+    function createCards() {
+      gameBoard.innerHTML = '';
+      characters.forEach(character => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.character = character;
+        const img = document.createElement('img');
+        img.src = imageMap[character];
+        card.appendChild(img);
+        card.addEventListener('click', flipCard);
+        gameBoard.appendChild(card);
+      });
+    }
+
+    function flipCard() {
+      if (!gameStarted) {
+        startTimer();
+        gameStarted = true;
+      }
+      if (flippedCards.length === 2 || this.classList.contains('flipped') || this.classList.contains('matched')) return;
+      this.classList.add('flipped');
+      flippedCards.push(this);
+      if (flippedCards.length === 2) {
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.dataset.character === card2.dataset.character) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedPairs++;
+        score += 10;
+        scoreElement.textContent = score;
+        if (matchedPairs === characters.length / 2) {
+          clearInterval(timerInterval);
+          alert('Hai vinto! Tempo: ' + timer + 's, Punteggio: ' + score);
+          if (score > currentHighscore) {
+              currentHighscore = score;
+              localStorage.setItem('memoryHighscoreGame', currentHighscore);
+              highscoreElement.textContent = currentHighscore;
+          }
+        }
+      } else {
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+        }, 1000);
+        score = Math.max(0, score - 5);
+        scoreElement.textContent = score;
+      }
+      flippedCards = [];
+    }
+
+    function startTimer() {
+      timer = 0;
+      timerElement.textContent = timer;
+      clearInterval(timerInterval); // Assicura che non ci siano più timer in esecuzione
+      timerInterval = setInterval(() => {
+        timer++;
+        timerElement.textContent = timer;
+      }, 1000);
+    }
+
+    function restartGame() {
+      clearInterval(timerInterval);
+      gameStarted = false;
+      matchedPairs = 0;
+      score = 0;
+      scoreElement.textContent = 0;
+      timer = 0;
+      timerElement.textContent = 0;
+      flippedCards = []; // Resetta le carte girate
+      shuffleArray(characters); // Rimescola le carte
+      createCards(); // Ricrea il tabellone
+    }
+
+    restartButton.addEventListener('click', restartGame);
+    createCards();
+    // Non avviare il timer automaticamente, aspetta il primo click
+  <\/script>
+</body>
+</html>`;
+        
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "memory.html";
+        a.click();
+      });
+
+      // Carica la home screen all'avvio
+      showScreen('home-screen');
+    });
+  </script>
+</body>
+</html>
